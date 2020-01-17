@@ -11,9 +11,20 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  TextStyle style = TextStyle(fontFamily: "NunitoSans", fontSize: 20, );
+  TextStyle style = TextStyle(
+    fontFamily: "NunitoSans",
+    fontSize: 20,
+  );
+
+  TextStyle headingStyle = TextStyle(
+    fontFamily: "NunitoSans",
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
 
   bool _hasSpeech = false;
+  bool _isListening = false;
   String lastWords = "";
   String lastError = "";
   String lastStatus = "";
@@ -35,20 +46,10 @@ class _HomeState extends State<Home> {
     });
   }
 
+  List<String> entries = <String>[];
+
   @override
   Widget build(BuildContext context) {
-    final List<String> entries = <String>[
-      'A',
-      'B',
-      'C',
-      'D',
-      'E',
-      'F',
-      'G',
-      'H',
-      'I'
-    ];
-
     var _noSpeech = Center(
       child: Text(
         'Speech recognition unavailable',
@@ -56,90 +57,186 @@ class _HomeState extends State<Home> {
       ),
     );
 
-    var _yesSpeech = Container(
-      // color: Colors.green[200],
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height * 0.91,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Container(
-          width: MediaQuery.of(context).size.width,
-          // padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-          // color: Colors.red[200],
-          child: Text(
-            'Transactions',
-            style: style,
-            textAlign: TextAlign.left,
+    var _yesSpeech = SingleChildScrollView(
+      child: Container(
+        // color: Colors.green[200],
+
+        width: MediaQuery.of(context).size.width,
+        margin: EdgeInsets.fromLTRB(20, 20, 20, 10),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(
+            width: MediaQuery.of(context).size.width,
+            // padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+            // color: Colors.red[200],
+            child: Text(
+              'Transactions',
+              style: headingStyle,
+              textAlign: TextAlign.left,
+            ),
           ),
-        ),
-        Container(
-          height: MediaQuery.of(context).size.height * 0.55,
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
-            itemCount: entries.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Container(
-                height: 70,
-                child: Card(
-                  elevation: 3,
-                  color: Colors.blue[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15)
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(15),
+            ),
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: entries.isEmpty
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.sentiment_satisfied,
+                        color: Colors.grey,
+                        size: 150,
+                      ),
+                      SizedBox(
+                        width: 100,
+                        height: 10,
+                      ),
+                      Text(
+                        "no transactions yet",
+                        style: TextStyle(
+                          fontFamily: "NunitoSans",
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                    itemCount: entries.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Stack(
+                        children: <Widget>[
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                            color: Colors.blue[100],
+                            child: Container(
+                              height: 130,
+                              width: MediaQuery.of(context).size.width,
+                              child: Column(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      '${entries[index]}',
+                                      style: style,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              color: Colors.redAccent,
+                              splashColor: Colors.white,
+                              onPressed: () {
+                                setState(() {
+                                  entries.removeAt(index);
+                                });
+                              },
+                              icon: Icon(Icons.close),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(
+                      height: 5,
+                      color: Colors.black12,
+                    ),
                   ),
-                  child: Center(
-                      child: Text(
-                    'Entry ${entries[index]}',
-                    style: style,
-                  )),
-                ),
-              );
-            },
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(color: Colors.white,),
           ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FlatButton(
-              child: Text('Stop'),
-              onPressed: stopListening,
-            ),
-            FlatButton(
-              child: Text('Cancel'),
-              onPressed: cancelListening,
-            ),
-          ],
-        ),
-        Expanded(
-          child: Column(
+          Column(
             children: <Widget>[
-              Center(
-                child: Text('Recognized Words', style: style,),
+              Container(
+                margin: EdgeInsets.only(top: 10),
+                width: MediaQuery.of(context).size.width,
+                child: lastWords.isEmpty
+                    ? Text("")
+                    : Text(
+                        'Recognized Words :',
+                        style: headingStyle,
+                        textAlign: TextAlign.left,
+                      ),
               ),
-              Center(
-                child: Text(lastWords, style: style,),
+              Container(
+                margin: EdgeInsets.only(top: 10),
+                width: MediaQuery.of(context).size.width,
+                child: Text(
+                  lastWords,
+                  style: TextStyle(
+                      fontFamily: "NunitoSans",
+                      fontSize: 20,
+                      color: Colors.white),
+                  textAlign: TextAlign.left,
+                ),
               ),
             ],
           ),
-        ),
-        IconButton(
-          color: Colors.red,
-          iconSize: 50,
-          icon: Icon(Icons.mic),
-          alignment: Alignment.bottomCenter,
-          onPressed: startListening,
-        ),
-      ]),
+        ]),
+      ),
     );
 
     return Scaffold(
+      backgroundColor: Colors.blue,
       appBar: AppBar(
-        title: const Text('Speech to Text Example'),
+        elevation: 0,
+        title: Center(
+          child: const Text(
+            'We\'Oice',
+            style: TextStyle(
+              fontFamily: "NunitoSans",
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: _hasSpeech ? _yesSpeech : _noSpeech,
-      ),
+      body: _hasSpeech ? _yesSpeech : _noSpeech,
+      floatingActionButton: _isListening
+          ? Container(
+              margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: Colors.redAccent,
+              ),
+              child: new IconButton(
+                color: Colors.white,
+                iconSize: 50,
+                icon: Icon(Icons.close),
+                alignment: Alignment.bottomCenter,
+                onPressed: stopListening,
+              ),
+            )
+          : Container(
+              margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: Colors.redAccent,
+              ),
+              child: new IconButton(
+                color: Colors.white,
+                iconSize: 50,
+                icon: Icon(Icons.mic),
+                alignment: Alignment.bottomCenter,
+                onPressed: startListening,
+              ),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
     );
   }
 
@@ -147,12 +244,16 @@ class _HomeState extends State<Home> {
     lastWords = "";
     lastError = "";
     speech.listen(onResult: resultListener);
-    setState(() {});
+    setState(() {
+      _isListening = true;
+    });
   }
 
   void stopListening() {
     speech.stop();
-    setState(() {});
+    setState(() {
+      _isListening = false;
+    });
   }
 
   void cancelListening() {
@@ -162,7 +263,17 @@ class _HomeState extends State<Home> {
 
   void resultListener(SpeechRecognitionResult result) {
     setState(() {
-      lastWords = "${result.recognizedWords} - ${result.finalResult}";
+      _isListening = !result.finalResult;
+
+      if (result.recognizedWords.isEmpty) {
+        lastWords = "";
+      } else {
+        lastWords = "${result.recognizedWords} - listening...";
+      }
+      if (result.finalResult) {
+        lastWords = "${result.recognizedWords}";
+        entries.add(result.recognizedWords);
+      }
     });
   }
 

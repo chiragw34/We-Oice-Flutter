@@ -21,7 +21,7 @@ class _MyAppState extends State<MyApp> {
       seconds: 3,
       navigateAfterSeconds: new Home(),
       title: new Text(
-        'Welcome to Voice',
+        'Welcome to We\'Oice',
         style: new TextStyle(fontFamily: "NunitoSans",fontWeight: FontWeight.bold, fontSize: 34.0),
       ),
       // image: new Image.network(
