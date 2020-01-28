@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import './util/functions.dart';
 
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -28,14 +29,17 @@ class _HomeState extends State<Home> {
   String lastWords = "";
   String lastError = "";
   String lastStatus = "";
+
+  var _amount;
   var _selectedType;
+  var _selectedItem;
+
   final SpeechToText speech = SpeechToText();
 
   @override
   void initState() {
-    // super.initState();
+    super.initState();
     initSpeechState();
-    print("selected $_selectedType");
   }
 
   Future<void> initSpeechState() async {
@@ -49,9 +53,12 @@ class _HomeState extends State<Home> {
   }
 
   List<String> entries = <String>[];
+  var costFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final data = textToData(lastWords);
+
     final appBar = AppBar(
       elevation: 0,
       title: Center(
@@ -197,19 +204,27 @@ class _HomeState extends State<Home> {
     );
 
     final costField = TextFormField(
-      validator: (value) {
-        // if (value.isEmpty) {
-        //   _number = "";
-        //   return "Please enter a mobile number";
-        // }
-        // _number = value;
-        // return null;
+      controller: costFieldController,
+      onTap: () {
+        data["amount"] = null;
+        costFieldController.text = null;
+      },
+      onChanged: (value) {
+        if (value.isEmpty) {
+          _amount = null;
+        }
+        setState(() {
+          // data["amount"] = null;
+          // costFieldController.text = value;
+          _amount = value;
+        });
       },
       autofocus: false,
       keyboardType: TextInputType.phone,
       style: style,
       decoration: InputDecoration(
-        contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+        contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+        labelStyle: style,
         hintText: "Amount *",
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15.0),
@@ -221,6 +236,7 @@ class _HomeState extends State<Home> {
       builder: (FormFieldState<String> state) {
         return InputDecorator(
           decoration: InputDecoration(
+            contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
             labelStyle: style,
             errorStyle:
                 TextStyle(color: Theme.of(context).errorColor, fontSize: 16.0),
@@ -234,13 +250,15 @@ class _HomeState extends State<Home> {
               // isDense: true,
               hint: Text("Select", style: style),
               onChanged: (String newValue) {
+                print("object");
                 setState(() {
                   _selectedType = newValue;
-                  state.didChange(_selectedType);
+                  state.didChange(newValue);
                 });
+                print("selected $_selectedType");
               },
 
-              items: ["Paid", "Recieved"].map((String v) {
+              items: ["Paid", "Received"].map((String v) {
                 return DropdownMenuItem<String>(
                   value: v.toString(),
                   child: Text(
@@ -256,25 +274,105 @@ class _HomeState extends State<Home> {
       },
     );
 
+    final itemField = FormField<String>(
+      builder: (FormFieldState<String> state) {
+        return InputDecorator(
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+            labelStyle: style,
+            errorStyle:
+                TextStyle(color: Theme.of(context).errorColor, fontSize: 16.0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+          ),
+          isEmpty: _selectedItem == '',
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              // isDense: true,
+              hint: Text("Select", style: style),
+              onChanged: (String newValue) {
+                setState(() {
+                  _selectedItem = newValue;
+                  state.didChange(_selectedItem);
+                });
+              },
+
+              items: ["All items name"].map((String v) {
+                return DropdownMenuItem<String>(
+                  value: v.toString(),
+                  child: Text(
+                    v,
+                    style: style,
+                  ),
+                );
+              }).toList(),
+              value: _selectedItem,
+            ),
+          ),
+        );
+      },
+    );
+
+    final addButton = IconButton(
+      color: Colors.blue,
+      iconSize: 35,
+      icon: Icon(Icons.add),
+      alignment: Alignment.centerRight,
+      onPressed: () {
+        setState(() {
+          entries.insert(0, "amount: $_amount, type: $_selectedType");
+        });
+      },
+    );
+
     final inputContainer = Container(
       margin: EdgeInsets.only(top: 10),
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(15),
       ),
-      height: 80,
-      child: Row(
+      height: 180,
+      child: Column(
         children: <Widget>[
-          new Flexible(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 5, 10),
-              child: costField,
+          Container(
+            height: 80,
+            child: Row(
+              children: <Widget>[
+                new Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 5, 10),
+                    child: costField,
+                  ),
+                ),
+                new Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(5, 10, 10, 10),
+                    child: typeField,
+                  ),
+                ),
+              ],
             ),
           ),
-          new Flexible(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(5, 10, 10, 10),
-              child: typeField,
+          Container(
+            height: 80,
+            child: Row(
+              children: <Widget>[
+                new Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 5, 10),
+                    child: itemField,
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.fromLTRB(15, 0, 15, 0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    border: Border.all(color: Colors.blue, width: 3),
+                  ),
+                  child: addButton,
+                )
+              ],
             ),
           ),
         ],
@@ -285,21 +383,24 @@ class _HomeState extends State<Home> {
       child: Container(
         // color: Colors.green[200],
         width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height * 0.8,
         margin: EdgeInsets.fromLTRB(20, 20, 20, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            transactionHeading,
-            transactionListContainer,
-            recognizedWords,
-            inputContainer,
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              transactionHeading,
+              transactionListContainer,
+              recognizedWords,
+              inputContainer,
+            ],
+          ),
         ),
       ),
     );
 
     final listeningButton = Container(
-      margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
+      margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
         color: Colors.redAccent,
@@ -314,7 +415,7 @@ class _HomeState extends State<Home> {
     );
 
     final notListeningButton = Container(
-      margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
+      margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
         color: Colors.redAccent,
@@ -327,6 +428,21 @@ class _HomeState extends State<Home> {
         onPressed: startListening,
       ),
     );
+
+    setState(() {
+      if (data["amount"] != null) {
+        costFieldController.text = data["amount"];
+        _amount = data["amount"];
+      }
+
+      if (data["type"] != null) {
+        _selectedType = data["type"];
+      }
+
+      if (data["items"] != null) {
+        _selectedItem = data["items"];
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.blue,
@@ -372,7 +488,6 @@ class _HomeState extends State<Home> {
       }
       if (result.finalResult) {
         lastWords = "${result.recognizedWords}";
-        entries.add(result.recognizedWords);
       }
     });
   }
